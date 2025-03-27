@@ -6,8 +6,9 @@ from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
 import string
 import nltk
+import re
+
 nltk.download('stopwords')
-nltk.download('punkt')
 
 # Ensure the "logs" directory exists
 log_dir = 'logs'
@@ -31,19 +32,22 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
+# Cache stopwords to avoid fetching them repeatedly
+cached_stopwords = set(stopwords.words('english'))
+
 def transform_text(text):
     """
-    Transforms the input text by converting it to lowercase, tokenizing, removing stopwords and punctuation, and stemming.
+    Transforms the input text by converting it to lowercase, tokenizing, removing stopwords, and stemming.
     """
     ps = PorterStemmer()
     # Convert to lowercase
     text = text.lower()
-    # Tokenize the text
-    text = nltk.word_tokenize(text)
+    # Tokenize using regex instead of nltk.word_tokenize
+    text = re.split(r'\W+', text)
     # Remove non-alphanumeric tokens
     text = [word for word in text if word.isalnum()]
-    # Remove stopwords and punctuation
-    text = [word for word in text if word not in stopwords.words('english') and word not in string.punctuation]
+    # Remove stopwords
+    text = [word for word in text if word not in cached_stopwords]
     # Stem the words
     text = [ps.stem(word) for word in text]
     # Join the tokens back into a single string
